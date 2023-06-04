@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"flag"
+	"fmt"
 	"go/ast"
 	"go/token"
 	"strings"
@@ -284,14 +285,32 @@ func (kt keyTags) run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
+type tagKeySet []string
+
+func (tks *tagKeySet) String() string {
+	return fmt.Sprint(*tks)
+}
+
+func (tks *tagKeySet) Set(value string) error {
+	*tks = append(*tks, value)
+	return nil
+}
+
 type keyTags struct {
-	allowedKeys []string
+	allowedKeys tagKeySet
 }
 
 func NewKeyTags() *analysis.Analyzer {
 	kt := keyTags{}
 
 	fs := flag.NewFlagSet("KeyTagsFlags", flag.ExitOnError)
+
+	fs.Var(
+		&kt.allowedKeys,
+		"allow-tag",
+		//nolint:lll
+		"tag key name to allow. Pass the flag multiple times to check for multiple keys",
+	)
 
 	return &analysis.Analyzer{
 		Name: "keytags",
