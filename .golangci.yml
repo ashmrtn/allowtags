@@ -3,15 +3,22 @@ run:
 
 linters:
   enable:
+    - errcheck
     - gci
     - godot
     - gofmt
     - gofumpt
+    - gosimple
+    - govet
     - importas
+    - ineffassign
     - lll
     - revive
+    - staticcheck
     - thelper
+    - typecheck
     - unconvert
+    - unused
     - wsl
 
 linters-settings:
