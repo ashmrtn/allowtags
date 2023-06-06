@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -15,20 +16,21 @@ import (
 )
 
 const (
-	controlCharMessage   = "control character outside tag value"
-	emptyKeyMessage      = "empty tag key"
-	badKeyCharMessage    = "invalid tag key character"
-	badValueQuoteMessage = "invalid character; expected '\"'"
-	stringLiteralMessage = "tags should be in a string literal"
-	emptyValueMessage    = "empty value for tag"
-	unquotedValueMessage = "tag values should be quoted"
-	partialKVMessage     = "incomplete kv-pair in tag"
-	unknownTagMessage    = "unknown tag key %s"
+	emptyKeyMessage               = "empty tag key"
+	badKeyCharMessage             = "invalid tag key character"
+	stringLiteralMessage          = "tags should be in a string literal"
+	missingSeparatorMessage       = "missing key-value separator"
+	emptyValueMessage             = "empty tag value"
+	unquotedValueMessage          = "tag values should be quoted"
+	unterminatedValueQuoteMessage = "unterminated value quote"
+	unknownTagMessage             = "unknown tag key '%s'"
 
 	kvSeparator   = ':'
 	valueQuote    = '"'
 	literalMarker = '`'
 	escapeChar    = '\\'
+
+	tagQuotes = "\"`"
 )
 
 var (
@@ -44,12 +46,13 @@ var (
 )
 
 type tag struct {
-	key       string
-	value     string
-	keyPos    token.Pos
-	valuePos  token.Pos
-	quoted    bool
-	separated bool
+	key          string
+	value        string
+	keyPos       token.Pos
+	valuePos     token.Pos
+	quoted       bool
+	noQuoteClose bool
+	separated    bool
 }
 
 type state int
@@ -93,19 +96,17 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 		pending        tag
 	)
 
-	if tags.Value[0] != literalMarker {
+	tagString, err := strconv.Unquote(tags.Value)
+	if err != nil {
 		pass.Reportf(
 			tags.ValuePos,
 			stringLiteralMessage,
 		)
-	} else if tags.Value[len(tags.Value)-1] != literalMarker {
-		pass.Reportf(
-			tags.ValuePos+token.Pos(len(tags.Value)),
-			stringLiteralMessage,
-		)
-	}
 
-	tagString := strings.Trim(tags.Value, string(literalMarker))
+		// We shouldn't have to fallback to this as the system should throw a parse
+		// error if the tag string isn't terminated, but just in case.
+		tagString = strings.Trim(tags.Value, tagQuotes)
+	}
 
 	// String splitting and manipulation. According to reflect.StructTag, each key
 	// is the set of non-control characters minus space, quote, and colon. All
@@ -118,7 +119,7 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 		if s != value && unicode.IsControl(c) {
 			pass.Reportf(
 				tags.ValuePos+token.Pos(i),
-				controlCharMessage,
+				badKeyCharMessage,
 			)
 
 			continue
@@ -132,10 +133,10 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 			}
 
 			if c == kvSeparator {
-				pass.Reportf(
-					tags.ValuePos+token.Pos(i),
-					emptyKeyMessage,
-				)
+				pending.separated = true
+				pending.keyPos = tags.ValuePos + token.Pos(i)
+				s = kvSep
+				stateStart = -1
 
 				continue
 			}
@@ -163,7 +164,10 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 
 				continue
 			} else if c == valueQuote {
+				pending.key = tagString[stateStart:i]
 				s = valueStart
+
+				continue
 			}
 
 			if slices.Contains(invalidKey, c) {
@@ -198,10 +202,19 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 			s = valueStart
 
 		case valueStart:
-			s = value
-			stateStart = i
 			pending.quoted = true
 			quoted = true
+
+			if c == valueQuote {
+				pending.valuePos = tags.ValuePos + token.Pos(i-1)
+				res = append(res, pending)
+				s = valueEnd
+
+				continue
+			}
+
+			s = value
+			stateStart = i
 			pending.valuePos = tags.ValuePos + token.Pos(i)
 
 		case value:
@@ -233,17 +246,29 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 		}
 	}
 
-	// Cleanup remaining state. We really only need to do something here if we
-	// had an unquoted value. Otherwise we had some partial kv-pair or we were
-	// between kv-pairs.
-	if s == value && !quoted {
-		pending.value = tagString[stateStart:]
+	// Cleanup remaining state.
+	switch s {
+	case key:
+		pending.key = tagString[stateStart:]
+		pending.valuePos = tags.ValuePos + token.Pos(len(tags.Value))
 		res = append(res, pending)
-	} else if s != separator && s != valueEnd {
-		pass.Reportf(
-			tags.ValuePos+token.Pos(len(tags.Value)),
-			partialKVMessage,
-		)
+
+	case kvSep:
+		pending.separated = true
+		fallthrough
+
+	case valueStart:
+		pending.valuePos = tags.ValuePos + token.Pos(len(tags.Value))
+		res = append(res, pending)
+
+	case value:
+		pending.value = tagString[stateStart:]
+
+		if pending.quoted {
+			pending.noQuoteClose = true
+		}
+
+		res = append(res, pending)
 	}
 
 	return res
@@ -269,12 +294,43 @@ func (kt keyTags) run(pass *analysis.Pass) (any, error) {
 			tags := getTags(pass, f.Tag)
 
 			for _, tag := range tags {
-				if !slices.Contains(kt.allowedKeys, tag.key) {
+				if len(tag.key) == 0 {
+					pass.Reportf(
+						tag.keyPos,
+						emptyKeyMessage,
+					)
+				} else if !slices.Contains(kt.allowedKeys, tag.key) {
 					pass.Reportf(
 						tag.keyPos,
 						unknownTagMessage,
 						tag.key,
 					)
+				}
+
+				if len(tag.value) == 0 {
+					pass.Reportf(
+						tag.valuePos,
+						emptyValueMessage,
+					)
+				} else {
+					if !tag.quoted {
+						pass.Reportf(
+							tag.valuePos,
+							unquotedValueMessage,
+						)
+					} else if tag.noQuoteClose {
+						pass.Reportf(
+							tag.valuePos+token.Pos(len(tag.value)),
+							unterminatedValueQuoteMessage,
+						)
+					}
+
+					if !tag.separated {
+						pass.Reportf(
+							tag.valuePos-1,
+							missingSeparatorMessage,
+						)
+					}
 				}
 			}
 		}
