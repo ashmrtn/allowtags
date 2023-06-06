@@ -21,7 +21,7 @@ jobs:
       - name: build
         run: go build -v ./...
       - name: get-gotestsum
-        run: go install gotest.tools/gotestsum
+        run: go install gotest.tools/gotestsum@latest
       - name: test
         run: gotestsum --jsonfile ./test-output.log -- --timeout 5m ./...
       - name: upload-logs
@@ -30,3 +30,5 @@ jobs:
           name: test-logs
           path: ./test-output.log
           retention-days: 30
+      - name: run
+        run: go run main.go ./...
