@@ -1,4 +1,4 @@
-module github.com/ashmrtn/keytags
+module github.com/ashmrtn/allowtags
 
 go 1.19
 

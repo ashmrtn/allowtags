@@ -3,10 +3,10 @@ package main
 import (
 	"golang.org/x/tools/go/analysis/singlechecker"
 
-	"github.com/ashmrtn/keytags/pkg/analyzer"
+	"github.com/ashmrtn/allowtags/pkg/allowtags"
 )
 
 func main() {
-	a := analyzer.NewKeyTags()
+	a := allowtags.New()
 	singlechecker.Main(a)
 }
