@@ -1,0 +1,8 @@
+! exec allowtags --allow-key json --allow-key bison good_keys.go
+
+-- good_keys.go --
+package good_keys
+
+type testStruct struct {
+  A int `json:a,omitempty bison:"a"`
+}

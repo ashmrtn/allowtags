@@ -1,0 +1,9 @@
+! exec allowtags --allow-key json --allow-key bison bad_keys.go
+stderr -count=2 'unknown tag key '
+
+-- bad_keys.go --
+package bad_keys
+
+type testStruct struct {
+  A int `josn:"a,omitempty" bisn:"a"`
+}
