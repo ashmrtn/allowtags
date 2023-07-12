@@ -1,4 +1,4 @@
-package analyzer_test
+package allowtags_test
 
 import (
 	"fmt"
@@ -8,18 +8,18 @@ import (
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/tools/go/analysis/analysistest"
 
-	"github.com/ashmrtn/keytags/pkg/analyzer"
+	"github.com/ashmrtn/allowtags/pkg/allowtags"
 )
 
-type KeyTagsSuite struct {
+type AllowTagsSuite struct {
 	suite.Suite
 }
 
-func TestKeyTags(t *testing.T) {
-	suite.Run(t, new(KeyTagsSuite))
+func TestAllowTags(t *testing.T) {
+	suite.Run(t, new(AllowTagsSuite))
 }
 
-func (s *KeyTagsSuite) TestLint() {
+func (s *AllowTagsSuite) TestLint() {
 	baseInput := "package a\n\ntype A struct {\n\tfield int %s %s\n}"
 	table := []struct {
 		name            string
@@ -216,13 +216,13 @@ func (s *KeyTagsSuite) TestLint() {
 
 			defer cleanup()
 
-			kt := analyzer.NewKeyTags()
+			at := allowtags.New()
 
 			for _, key := range test.allowTags {
-				require.NoError(t, kt.Flags.Set("allow-tag", key))
+				require.NoError(t, at.Flags.Set("allow-key", key))
 			}
 
-			analysistest.Run(t, dir, kt, "a")
+			analysistest.Run(t, dir, at, "a")
 		})
 	}
 }

@@ -1,4 +1,4 @@
-package analyzer
+package allowtags
 
 import (
 	"flag"
@@ -274,7 +274,7 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 	return res
 }
 
-func (kt keyTags) run(pass *analysis.Pass) (any, error) {
+func (at allowTags) run(pass *analysis.Pass) (any, error) {
 	inspec := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	// Golang language spec defines structs as the only valid place for tags.
@@ -299,7 +299,7 @@ func (kt keyTags) run(pass *analysis.Pass) (any, error) {
 						tag.keyPos,
 						emptyKeyMessage,
 					)
-				} else if !slices.Contains(kt.allowedKeys, tag.key) {
+				} else if !slices.Contains(at.allowedKeys, tag.key) {
 					pass.Reportf(
 						tag.keyPos,
 						unknownTagMessage,
@@ -352,30 +352,30 @@ func (tks *tagKeySet) Set(value string) error {
 	return nil
 }
 
-type keyTags struct {
+type allowTags struct {
 	allowedKeys tagKeySet
 }
 
-func NewKeyTags() *analysis.Analyzer {
-	kt := keyTags{}
+func New() *analysis.Analyzer {
+	at := allowTags{}
 
-	fs := flag.NewFlagSet("KeyTagsFlags", flag.ExitOnError)
+	fs := flag.NewFlagSet("AllowTagsFlags", flag.ExitOnError)
 
 	fs.Var(
-		&kt.allowedKeys,
-		"allow-tag",
+		&at.allowedKeys,
+		"allow-key",
 		//nolint:lll
-		"tag key name to allow. Pass the flag multiple times to check for multiple keys",
+		"tag key name to allow. Pass the flag multiple times to allow multiple keys",
 	)
 
 	return &analysis.Analyzer{
-		Name: "keytags",
+		Name: "allowtags",
 		//nolint:lll
 		Doc:      "Checks tag keys to ensure they match one of the keys in the provided list",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Flags:    *fs,
 		Run: func(pass *analysis.Pass) (any, error) {
-			return kt.run(pass)
+			return at.run(pass)
 		},
 	}
 }

@@ -26,7 +26,7 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/ashmrtn/keytags)
+      - prefix(github.com/ashmrtn/allowtags)
   lll:
     line-length: 80
   revive:
