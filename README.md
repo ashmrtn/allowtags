@@ -20,7 +20,7 @@ your whole project with AllowTags just run `allowtags --allow-key key1 ./...`.
 ### Flags
 AllowTags requires all tags that it allows be explicitly given. To specify
 multiple tag keys pass the `--allow-key` flag multiple times, each time with a
-different tag key.
+different tag key, or separate different tag keys with a comma.
 
 ## Limitations
 AllowTags uses a different parsing method than govet and the golang standard
