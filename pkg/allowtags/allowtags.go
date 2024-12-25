@@ -348,7 +348,14 @@ func (tks *tagKeySet) String() string {
 }
 
 func (tks *tagKeySet) Set(value string) error {
-	*tks = append(*tks, value)
+	allValues := strings.Split(value, ",")
+
+	for _, val := range allValues {
+		if len(val) > 0 {
+			*tks = append(*tks, val)
+		}
+	}
+
 	return nil
 }
 
@@ -365,7 +372,8 @@ func New() *analysis.Analyzer {
 		&at.allowedKeys,
 		"allow-key",
 		//nolint:lll
-		"tag key name to allow. Pass the flag multiple times to allow multiple keys",
+		"tag key name to allow. Pass the flag multiple times or separate values"+
+			"with commas to specify multiple keys",
 	)
 
 	return &analysis.Analyzer{

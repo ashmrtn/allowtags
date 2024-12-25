@@ -201,6 +201,29 @@ func (s *AllowTagsSuite) TestLint() {
 			inputTags:       "`json :\"field,omitempty\"`",
 			expectedMessage: "// want `invalid tag key character` ",
 		},
+		{
+			name: "CommaSeparatedKeys",
+			allowTags: []string{
+				"binary,json",
+			},
+			inputTags: "`json:\"field,omitempty\" binary:\"field\"`",
+		},
+		{
+			name: "CommaSeparatedKeys_EmptyKey",
+			allowTags: []string{
+				",json",
+			},
+			inputTags:       "`json:\"field,omitempty\" binary:\"field\"`",
+			expectedMessage: "// want `unknown tag key 'binary'`",
+		},
+		{
+			name: "CommaSeparatedKeysAndOtherKey",
+			allowTags: []string{
+				"binary,json",
+				"xml",
+			},
+			inputTags: "`json:\"field,omitempty\" binary:\"field\" xml:\"foo\"`",
+		},
 	}
 
 	for _, test := range table {
