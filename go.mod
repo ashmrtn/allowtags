@@ -1,6 +1,6 @@
 module github.com/ashmrtn/allowtags
 
-go 1.23.4
+go 1.25.4
 
 require (
 	github.com/rogpeppe/go-internal v1.11.0
