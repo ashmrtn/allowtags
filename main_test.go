@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -13,14 +12,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(testscript.RunMain(m, map[string]func() int{
-		"allowtags": func() int {
-			main()
-
-			// Won't reach here because main will exit early.
-			return 0
-		},
-	}))
+	testscript.Main(m, map[string]func(){
+		"allowtags": main,
+	})
 }
 
 func TestScripts(t *testing.T) {
