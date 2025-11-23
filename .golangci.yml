@@ -1,69 +1,104 @@
-run:
-  timeout: 5m
-
+version: "2"
 linters:
   enable:
     - errcheck
-    - gci
+    - errorlint
+    - exptostd
     - godot
-    - gofmt
-    - gofumpt
-    - gosimple
     - govet
     - importas
     - ineffassign
+    - iotamixing
     - lll
+    - misspell
+    - reassign
     - revive
     - staticcheck
     - thelper
-    - typecheck
     - unconvert
+    - usestdlibvars
+    - usetesting
     - unused
-    - wsl
-
-linters-settings:
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/ashmrtn/allowtags)
-  lll:
-    line-length: 80
-  revive:
-    severity: error
-    rules:
-      - name: blank-imports
-      - name: bool-literal-in-expr
-      - name: constant-logical-expr
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: duplicated-imports
-      - name: early-return
-      - name: errorf
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: empty-block
-      - name: exported
-      - name: if-return
-      - name: identical-branches
-      - name: import-shadowing
-      - name: increment-decrement
-      - name: indent-error-flow
-      - name: modifies-value-receiver
-      - name: optimize-operands-order
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: redefines-builtin-id
-      - name: superfluous-else
-      - name: time-equal
-      - name: time-naming
-      - name: unexported-return
-      - name: unnecessary-stmt
-      - name: unused-receiver
-      - name: use-any
-      - name: useless-break
-      - name: var-declaration
-      - name: var-naming
+    - wsl_v5
+  settings:
+    lll:
+      line-length: 80
+    revive:
+      severity: error
+      rules:
+        - name: blank-imports
+        - name: bool-literal-in-expr
+        - name: constant-logical-expr
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: duplicated-imports
+        - name: early-return
+        - name: errorf
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: empty-block
+        - name: enforce-map-style
+          arguments:
+            - literal
+        - name: enforce-repeated-arg-type-style
+          arguments:
+            - full
+        - name: enforce-slice-style
+          arguments:
+            - nil
+        - name: enforce-switch-style
+          arguments: ["allowNoDefault"]
+        - name: error-return
+        - name: exported
+        - name: identical-branches
+        - name: identical-ifelseif-branches
+        - name: identical-ifelseif-conditions
+        - name: identical-switch-branches
+        - name: identical-switch-conditions
+        - name: if-return
+        - name: import-shadowing
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: modifies-value-receiver
+        - name: optimize-operands-order
+        - name: package-directory-mismatch
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: redundant-import-alias
+        - name: string-of-int
+        - name: superfluous-else
+        - name: time-equal
+        - name: time-naming
+        - name: unchecked-type-assertion
+        - name: unexported-return
+        - name: unnecessary-format
+        - name: unnecessary-stmt
+        - name: unused-receiver
+        - name: use-any
+        - name: useless-break
+        - name: useless-fallthrough
+        - name: var-declaration
+        - name: var-naming
+        - name: waitgroup-by-value
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - std-error-handling
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/ashmrtn/allowtags)
+  exclusions:
+    generated: lax

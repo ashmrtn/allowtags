@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
 
-	"golang.org/x/exp/slices"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -275,6 +275,7 @@ func getTags(pass *analysis.Pass, tags *ast.BasicLit) []tag {
 }
 
 func (at allowTags) run(pass *analysis.Pass) (any, error) {
+	//revive:disable-next-line:unchecked-type-assertion
 	inspec := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	// Golang language spec defines structs as the only valid place for tags.
