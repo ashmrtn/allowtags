@@ -40,14 +40,16 @@ linters:
         - name: error-naming
         - name: empty-block
         - name: enforce-map-style
-          arguments: literal
+          arguments:
+            - literal
         - name: enforce-repeated-arg-type-style
           arguments:
             - full
         - name: enforce-slice-style
-          arguments: nil
+          arguments:
+            - nil
         - name: enforce-switch-style
-          arguments: allowNoDefault
+          arguments: ["allowNoDefault"]
         - name: error-return
         - name: exported
         - name: identical-branches
