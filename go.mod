@@ -5,8 +5,8 @@ go 1.26.8
 require (
 	github.com/rogpeppe/go-internal v1.16.0
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/sys v0.48.0
-	golang.org/x/tools v0.50.0
+	golang.org/x/sys v0.49.0
+	golang.org/x/tools v0.51.0
 )
 
 require (
